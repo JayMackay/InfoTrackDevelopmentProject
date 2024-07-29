@@ -1,9 +1,6 @@
 ﻿using InfoTrackDevelopmentProject.Business.Interfaces;
 using InfoTrackDevelopmentProject.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
 
 namespace InfoTrackDevelopmentProject.Controllers
 {

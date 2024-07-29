@@ -43,12 +43,12 @@ const SearchForm = () => {
             if (data.positions.includes(-1)) {
                 // Check if -1 is due to rate limit
                 if (data.error && data.error.includes('rate limit exceeded')) {
-                    setResult('Search engine rate limit exceeded. Please try again later.');
+                    setResult('Search engine rate limit exceeded, please try again later');
                 } else {
-                    setResult('No valid URL found with the matching phrase.');
+                    setResult('No valid URL found with the matching phrase');
                 }
             } else if (data.positions.length === 0) {
-                setResult('No results found.');
+                setResult('No results found');
             } else {
                 setResult(data.positions.join(', '));
             }
@@ -68,7 +68,7 @@ const SearchForm = () => {
             <h1>SEO Search</h1>
             <form onSubmit={handleSubmit}>
                 <div>
-                    <label htmlFor="keywords">Keywords:</label>
+                    <label htmlFor="keywords">Keywords: </label>
                     <input
                         id="keywords"
                         type="text"
@@ -78,7 +78,7 @@ const SearchForm = () => {
                     />
                 </div>
                 <div>
-                    <label htmlFor="url">URL:</label>
+                    <label htmlFor="url">URL: </label>
                     <input
                         id="url"
                         type="text"

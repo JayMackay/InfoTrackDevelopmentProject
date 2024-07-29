@@ -3,8 +3,6 @@ using InfoTrackDevelopmentProject.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework;
-using System.Threading.Tasks;
 
 namespace InfoTrackDevelopmentProject.Tests.Services
 {

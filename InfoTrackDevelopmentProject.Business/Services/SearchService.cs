@@ -2,10 +2,6 @@
 using InfoTrackDevelopmentProject.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace InfoTrackDevelopmentProject.Business.Services
 {
@@ -40,9 +36,8 @@ namespace InfoTrackDevelopmentProject.Business.Services
                     var responseCode = (int)response.StatusCode;
                     var responseContent = await response.Content.ReadAsStringAsync();
 
-                    var truncatedContent = responseContent.Length > 500 ? responseContent[..500] : responseContent;
-                    _logger.LogInformation("Received response from {Url}. Status Code: {ResponseCode}. Response length: {ResponseLength} characters. Truncated content: {TruncatedContent}",
-                        url, responseCode, responseContent.Length, truncatedContent);
+                    _logger.LogInformation("Received response from {Url}. Status Code: {ResponseCode}. Response length: {ResponseLength} characters",
+                       url, responseCode, responseContent.Length);
 
                     if(response.IsSuccessStatusCode)
                     {

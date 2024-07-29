@@ -8,7 +8,7 @@ const SearchEngineDropdown = ({ selectedEngine, onEngineChange }) => {
 
     return (
         <div>
-            <label htmlFor="search-engine">Search Engine:</label>
+            <label htmlFor="search-engine">Search Engine: </label>
             <select
                 id="search-engine"
                 value={selectedEngine}
