@@ -1,5 +1,6 @@
 using InfoTrackDevelopmentProject.Business.Interfaces;
 using InfoTrackDevelopmentProject.Business.Services;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,9 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 
 // Configure logging
 builder.Services.AddLogging(configure => configure.AddConsole());
+
+// Add configuration services
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 var app = builder.Build();
 
