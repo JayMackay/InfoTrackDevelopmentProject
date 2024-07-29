@@ -1,6 +1,7 @@
 ﻿using InfoTrackDevelopmentProject.Business.Interfaces;
 using InfoTrackDevelopmentProject.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -11,10 +12,12 @@ namespace InfoTrackDevelopmentProject.Controllers
     public class SearchController : ControllerBase
     {
         private readonly ISearchService _searchService;
+        private readonly ILogger<SearchController> _logger;
 
-        public SearchController(ISearchService searchService)
+        public SearchController(ISearchService searchService, ILogger<SearchController> logger)
         {
             _searchService = searchService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -22,19 +25,19 @@ namespace InfoTrackDevelopmentProject.Controllers
         {
             if(request == null)
             {
-                Console.WriteLine("Search request is null.");
+                _logger.LogWarning("Search request is null.");
                 return BadRequest("Search request cannot be null.");
             }
 
             if(string.IsNullOrWhiteSpace(request.Keywords))
             {
-                Console.WriteLine("Search request keywords are missing.");
+                _logger.LogWarning("Search request keywords are missing.");
                 return BadRequest("Keywords cannot be empty.");
             }
 
             if(string.IsNullOrWhiteSpace(request.Url))
             {
-                Console.WriteLine("Search request URL is missing.");
+                _logger.LogWarning("Search request URL is missing.");
                 return BadRequest("URL cannot be empty.");
             }
 
@@ -45,7 +48,7 @@ namespace InfoTrackDevelopmentProject.Controllers
             }
             catch(Exception ex)
             {
-                Console.WriteLine($"An error occurred while processing the search request: {ex.Message}");
+                _logger.LogError(ex, "An error occurred while processing the search request.");
                 return StatusCode(500, "An error occurred while processing the request.");
             }
         }
