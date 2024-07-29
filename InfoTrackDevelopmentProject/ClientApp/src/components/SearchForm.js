@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import '../styles.css';
+import SearchEngineDropdown from './SearchEngineDropdown';
 
 const SearchForm = () => {
     const [keywords, setKeywords] = useState('');
@@ -7,6 +8,7 @@ const SearchForm = () => {
     const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [selectedEngine, setSelectedEngine] = useState('google'); // Default search engine
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -28,7 +30,7 @@ const SearchForm = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ keywords, url }),
+                body: JSON.stringify({ keywords, url, searchEngine: selectedEngine }), // Include selectedEngine
             });
 
             if (!response.ok) {
@@ -37,9 +39,14 @@ const SearchForm = () => {
 
             const data = await response.json();
 
-            // Check if result contains -1
+            // Check the result
             if (data.positions.includes(-1)) {
-                setResult('No valid URL found with the matching phrase or rate limit exceeded.');
+                // Check if -1 is due to rate limit
+                if (data.error && data.error.includes('rate limit exceeded')) {
+                    setResult('Search engine rate limit exceeded. Please try again later.');
+                } else {
+                    setResult('No valid URL found with the matching phrase.');
+                }
             } else if (data.positions.length === 0) {
                 setResult('No results found.');
             } else {
@@ -80,6 +87,10 @@ const SearchForm = () => {
                         required
                     />
                 </div>
+                <SearchEngineDropdown
+                    selectedEngine={selectedEngine}
+                    onEngineChange={setSelectedEngine} // Handle engine change
+                />
                 <button type="submit" disabled={loading}>
                     {loading ? 'Searching...' : 'Search'}
                 </button>

@@ -2,7 +2,8 @@
 {
     public class SearchRequest
     {
-        public string Keywords { get; set; } = string.Empty;
-        public string Url { get; set; } = string.Empty;
+        public required string Keywords { get; set; }
+        public required string Url { get; set; }
+        public string SearchEngine { get; set; } = "google"; // Default to Google
     }
 }
