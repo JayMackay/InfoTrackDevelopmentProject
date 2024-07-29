@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfoTrackDevelopmentProject
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfoTrackDevelopmentProject.Infrastructure", "InfoTrackDevelopmentProject.Infrastructure\InfoTrackDevelopmentProject.Infrastructure.csproj", "{B012D9BA-C68B-40FB-8AF3-A1EE555FF07D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InfoTrackDevelopmentProject.Tests", "InfoTrackDevelopmentProject.Tests\InfoTrackDevelopmentProject.Tests.csproj", "{77E3A3F1-8D8D-4882-8CD7-9426710187AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{B012D9BA-C68B-40FB-8AF3-A1EE555FF07D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B012D9BA-C68B-40FB-8AF3-A1EE555FF07D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B012D9BA-C68B-40FB-8AF3-A1EE555FF07D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77E3A3F1-8D8D-4882-8CD7-9426710187AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77E3A3F1-8D8D-4882-8CD7-9426710187AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77E3A3F1-8D8D-4882-8CD7-9426710187AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77E3A3F1-8D8D-4882-8CD7-9426710187AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
