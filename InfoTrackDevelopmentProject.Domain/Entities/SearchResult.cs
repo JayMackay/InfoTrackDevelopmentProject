@@ -2,10 +2,6 @@
 {
     public class SearchResult
     {
-        public List<int> Positions { get; set; }
-        public SearchResult()
-        {
-            Positions = new List<int>();
-        }
+        public List<int> Positions { get; set; } = new List<int>();
     }
 }
