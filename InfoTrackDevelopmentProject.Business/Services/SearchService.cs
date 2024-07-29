@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using InfoTrackDevelopmentProject.Business.Interfaces;
+﻿using InfoTrackDevelopmentProject.Business.Interfaces;
 using InfoTrackDevelopmentProject.Domain.Entities;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace InfoTrackDevelopmentProject.Business.Services
 {
@@ -13,16 +10,18 @@ namespace InfoTrackDevelopmentProject.Business.Services
         private const int MaxRetries = 3;
         private const int DelayMilliseconds = 2000; // 2 seconds
         private readonly ILogger<SearchService> _logger;
+        private readonly IConfiguration _configuration;
 
-        public SearchService(ILogger<SearchService> logger)
+        public SearchService(ILogger<SearchService> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<SearchResult> GetSearchResultAsync(SearchRequest request)
         {
             var result = new SearchResult();
-            var url = $"https://www.google.co.uk/search?num=100&q={Uri.EscapeDataString(request.Keywords)}";
+            var url = GetSearchUrl(request.Keywords, request.SearchEngine);
 
             int retries = 0;
 
@@ -30,25 +29,59 @@ namespace InfoTrackDevelopmentProject.Business.Services
             {
                 try
                 {
-                    // Create a new httpClient to refresh the service for consecutive runs
+                    // Create a new HttpClient to refresh the service for consecutive runs
                     using var httpClient = new HttpClient();
 
-                    var response = await httpClient.GetStringAsync(url);
+                    var response = await httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, url));
+                    var responseCode = (int)response.StatusCode;
+                    var responseContent = await response.Content.ReadAsStringAsync();
 
-                    var responseContent = response.Length > 500 ? response[..500] : response;
-                    _logger.LogInformation("Response Content: {ResponseContent}", responseContent);
+                    _logger.LogInformation("Received response from {Url}. Status Code: {ResponseCode}. Response length: {ResponseLength} characters",
+                       url, responseCode, responseContent.Length);
 
-                    var positions = FindUrlPositions(response, request.Url);
-
-                    if(positions.Count == 0)
+                    if(response.IsSuccessStatusCode)
                     {
-                        result.Positions.Add(-1);
+                        var positions = FindUrlPositions(responseContent, request.Url);
+
+                        if(positions.Count == 0)
+                        {
+                            _logger.LogInformation("No valid URL found with the matching phrase: {SearchPhrase}", request.Url);
+                            result.Positions.Add(-1);
+                        }
+                        else
+                        {
+                            result.Positions.AddRange(positions);
+                        }
+                        break;
+                    }
+                    else if(responseCode == 429) // Rate limit exceeded
+                    {
+                        _logger.LogWarning("Search engine rate limit exceeded. Retrying...");
+                        retries++;
+                        if(retries >= MaxRetries)
+                        {
+                            _logger.LogWarning("Max retries reached. No valid URL found with the matching phrase: {SearchPhrase}", request.Url);
+                            result.Positions.Add(-1);
+                        }
+                        else
+                        {
+                            await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, retries));
+                        }
                     }
                     else
                     {
-                        result.Positions.AddRange(positions);
+                        _logger.LogWarning("Received non-success status code: {ResponseCode}. Retrying...", responseCode);
+                        retries++;
+                        if(retries >= MaxRetries)
+                        {
+                            _logger.LogWarning("Max retries reached. No valid URL found with the matching phrase: {SearchPhrase}", request.Url);
+                            result.Positions.Add(-1);
+                        }
+                        else
+                        {
+                            await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, retries));
+                        }
                     }
-                    break;
                 }
                 catch(HttpRequestException ex) when(ex.Message.Contains("429"))
                 {
@@ -56,6 +89,7 @@ namespace InfoTrackDevelopmentProject.Business.Services
                     retries++;
                     if(retries >= MaxRetries)
                     {
+                        _logger.LogWarning("Max retries reached. No valid URL found with the matching phrase: {SearchPhrase}", request.Url);
                         result.Positions.Add(-1);
                     }
                     else
@@ -96,6 +130,17 @@ namespace InfoTrackDevelopmentProject.Business.Services
             }
 
             return positions;
+        }
+
+        private string GetSearchUrl(string keywords, string searchEngine)
+        {
+            var baseUrl = searchEngine.ToLower() switch
+            {
+                "bing" => _configuration["SearchEngines:Bing"],
+                "yahoo" => _configuration["SearchEngines:Yahoo"],
+                _ => _configuration["SearchEngines:Google"],
+            };
+            return $"{baseUrl}{Uri.EscapeDataString(keywords)}";
         }
     }
 }
