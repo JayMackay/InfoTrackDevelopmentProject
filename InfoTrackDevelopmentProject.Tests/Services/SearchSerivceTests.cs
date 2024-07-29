@@ -81,11 +81,11 @@ namespace InfoTrackDevelopmentProject.Tests.ServiceTests
             // Assert
             Assert.NotNull(result); // Ensure the result is not null
             Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.IsEmpty(result.Positions);
+            Assert.Contains(-1, result.Positions); // Check for -1 to indicate no valid URL found
         }
 
         [Test]
-        public async Task GetSearchResultAsync_HandlesError_WhenHttpRequestExceptionIsThrown()
+        public async Task GetSearchResultAsync_HandlesOtherHttpRequestExceptions()
         {
             // Arrange
             var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.example.com" };
@@ -104,7 +104,31 @@ namespace InfoTrackDevelopmentProject.Tests.ServiceTests
             // Assert
             Assert.NotNull(result); // Ensure the result is not null
             Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.IsEmpty(result.Positions);
+            Assert.Contains(-1, result.Positions); // Check for -1 to indicate error
+        }
+
+        [Test]
+        public async Task GetSearchResultAsync_RetriesOnRateLimitError_AndReturnsErrorAfterMaxRetries()
+        {
+            // Arrange
+            var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.example.com" };
+
+            // Setup the handler to throw a 429 error to simulate rate limiting
+            _httpMessageHandlerMock.Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.Is<HttpRequestMessage>(req => req != null && req.Method == HttpMethod.Get && req.RequestUri != null && req.RequestUri.ToString().Contains("example")),
+                    ItExpr.IsAny<CancellationToken>()
+                )
+                .ThrowsAsync(new HttpRequestException("429 Too Many Requests"));
+
+            // Act
+            var result = await _searchService.GetSearchResultAsync(searchRequest);
+
+            // Assert
+            Assert.NotNull(result); // Ensure the result is not null
+            Assert.NotNull(result.Positions); // Ensure the Positions list is not null
+            Assert.Contains(-1, result.Positions); // Check for -1 to indicate error after retries
         }
     }
 }

@@ -1,31 +1,39 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const { env } = require('process');
 
-const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_HTTPS_PORT}` :
-  env.ASPNETCORE_URLS ? env.ASPNETCORE_URLS.split(';')[0] : 'http://localhost:9463';
+// Determine the target URL based on environment variables
+let target;
 
-const context = [
-  "/weatherforecast",
-];
-
-const onError = (err, req, resp, target) => {
-    console.error(`${err.message}`);
+if (env.ASPNETCORE_HTTPS_PORT) {
+    target = `https://localhost:${env.ASPNETCORE_HTTPS_PORT}`;
+} else if (env.ASPNETCORE_URLS) {
+    target = env.ASPNETCORE_URLS.split(';')[0];
+} else {
+    target = 'http://localhost:5000';
 }
 
-module.exports = function (app) {
-  const appProxy = createProxyMiddleware(context, {
-    proxyTimeout: 10000,
-    target: target,
-    // Handle errors to prevent the proxy middleware from crashing when
-    // the ASP NET Core webserver is unavailable
-    onError: onError,
-    secure: false,
-    // Uncomment this line to add support for proxying websockets
-    //ws: true, 
-    headers: {
-      Connection: 'Keep-Alive'
-    }
-  });
+const context = [
+    "/api" // Ensure this matches the base path of your API endpoints
+];
 
-  app.use(appProxy);
+const onError = (err, req, res) => {
+    console.error(`Proxy error: ${err.message}`);
+    res.writeHead(500, {
+        'Content-Type': 'text/plain'
+    });
+    res.end('Something went wrong. And we are reporting a custom error message.');
+};
+
+module.exports = function (app) {
+    app.use(
+        createProxyMiddleware(context, {
+            target: target,
+            changeOrigin: true, // Ensure the origin is changed to the target
+            secure: false, // Set to true if using valid certificates
+            onError: onError,
+            headers: {
+                Connection: 'Keep-Alive'
+            }
+        })
+    );
 };

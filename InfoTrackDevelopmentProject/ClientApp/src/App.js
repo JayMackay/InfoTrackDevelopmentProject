@@ -1,22 +1,19 @@
-import React, { Component } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import AppRoutes from './AppRoutes';
-import { Layout } from './components/Layout';
-import './custom.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import SearchForm from './components/SearchForm';
+import Header from './components/Header';
 
-export default class App extends Component {
-  static displayName = App.name;
-
-  render() {
+function App() {
     return (
-      <Layout>
-        <Routes>
-          {AppRoutes.map((route, index) => {
-            const { element, ...rest } = route;
-            return <Route key={index} {...rest} element={element} />;
-          })}
-        </Routes>
-      </Layout>
+        <Router>
+            <div>
+                <Header />
+                <Routes>
+                    <Route path="/" element={<SearchForm />} />
+                </Routes>
+            </div>
+        </Router>
     );
-  }
 }
+
+export default App;
