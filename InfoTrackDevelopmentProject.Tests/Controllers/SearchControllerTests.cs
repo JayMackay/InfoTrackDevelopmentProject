@@ -3,6 +3,8 @@ using InfoTrackDevelopmentProject.Domain.Entities;
 using InfoTrackDevelopmentProject.Business.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging;
+
 
 namespace InfoTrackDevelopmentProject.Tests.ControllerTests
 {
@@ -10,13 +12,15 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
     public class SearchControllerTests
     {
         private Mock<ISearchService> _searchServiceMock;
+        private Mock<ILogger<SearchController>> _loggerMock;
         private SearchController _controller;
 
         [SetUp]
         public void Setup()
         {
             _searchServiceMock = new Mock<ISearchService>();
-            _controller = new SearchController(_searchServiceMock.Object);
+            _loggerMock = new Mock<ILogger<SearchController>>();
+            _controller = new SearchController(_searchServiceMock.Object, _loggerMock.Object);
         }
 
         [Test]
@@ -28,9 +32,13 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
             // Assert
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
             var actionResult = result as BadRequestObjectResult;
-            Assert.NotNull(actionResult, "Action result should not be null.");
-            Assert.That(actionResult.StatusCode, Is.EqualTo(400));
-            Assert.That(actionResult.Value, Is.EqualTo("Search request cannot be null."));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actionResult, Is.Not.Null);
+                Assert.That(actionResult?.StatusCode, Is.EqualTo(400));
+                Assert.That(actionResult?.Value, Is.EqualTo("Search request cannot be null."));
+            });
         }
 
         [Test]
@@ -45,9 +53,13 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
             // Assert
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
             var actionResult = result as BadRequestObjectResult;
-            Assert.NotNull(actionResult, "Action result should not be null.");
-            Assert.That(actionResult.StatusCode, Is.EqualTo(400));
-            Assert.That(actionResult.Value, Is.EqualTo("Keywords cannot be empty."));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actionResult, Is.Not.Null);
+                Assert.That(actionResult?.StatusCode, Is.EqualTo(400));
+                Assert.That(actionResult?.Value, Is.EqualTo("Keywords cannot be empty."));
+            });
         }
 
         [Test]
@@ -62,9 +74,13 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
             // Assert
             Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
             var actionResult = result as BadRequestObjectResult;
-            Assert.NotNull(actionResult, "Action result should not be null.");
-            Assert.That(actionResult.StatusCode, Is.EqualTo(400));
-            Assert.That(actionResult.Value, Is.EqualTo("URL cannot be empty."));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actionResult, Is.Not.Null);
+                Assert.That(actionResult?.StatusCode, Is.EqualTo(400));
+                Assert.That(actionResult?.Value, Is.EqualTo("URL cannot be empty."));
+            });
         }
 
         [Test]
@@ -83,9 +99,13 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
             // Assert
             Assert.That(result, Is.InstanceOf<OkObjectResult>());
             var actionResult = result as OkObjectResult;
-            Assert.NotNull(actionResult, "Action result should not be null.");
-            Assert.That(actionResult.StatusCode, Is.EqualTo(200));
-            Assert.That(actionResult.Value, Is.EqualTo(searchResult));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actionResult, Is.Not.Null);
+                Assert.That(actionResult?.StatusCode, Is.EqualTo(200));
+                Assert.That(actionResult?.Value, Is.EqualTo(searchResult));
+            });
         }
 
         [Test]
@@ -103,9 +123,13 @@ namespace InfoTrackDevelopmentProject.Tests.ControllerTests
             // Assert
             Assert.That(result, Is.InstanceOf<ObjectResult>());
             var actionResult = result as ObjectResult;
-            Assert.NotNull(actionResult, "Action result should not be null.");
-            Assert.That(actionResult.StatusCode, Is.EqualTo(500));
-            Assert.That(actionResult.Value, Is.EqualTo("An error occurred while processing the request."));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(actionResult, Is.Not.Null);
+                Assert.That(actionResult?.StatusCode, Is.EqualTo(500));
+                Assert.That(actionResult?.Value, Is.EqualTo("An error occurred while processing the request."));
+            });
         }
     }
 }

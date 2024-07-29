@@ -12,6 +12,9 @@ builder.Services.AddHttpClient();
 // Register additional services with dependency injection
 builder.Services.AddScoped<ISearchService, SearchService>();
 
+// Configure logging
+builder.Services.AddLogging(configure => configure.AddConsole());
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

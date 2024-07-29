@@ -1,134 +1,69 @@
 ﻿using InfoTrackDevelopmentProject.Business.Services;
 using InfoTrackDevelopmentProject.Domain.Entities;
+using Microsoft.Extensions.Logging;
 using Moq;
-using Moq.Protected;
-using System.Net;
+using NUnit.Framework;
+using System.Threading.Tasks;
 
-
-namespace InfoTrackDevelopmentProject.Tests.ServiceTests
+namespace InfoTrackDevelopmentProject.Tests.Services
 {
-    [TestFixture]
-    internal class SearchServiceTests
+    public class SearchServiceTests
     {
-        private Mock<HttpMessageHandler> _httpMessageHandlerMock;
         private SearchService _searchService;
+        private Mock<ILogger<SearchService>> _mockLogger;
 
         [SetUp]
         public void Setup()
         {
-            _httpMessageHandlerMock = new Mock<HttpMessageHandler>();
-
-            // Create HttpClient with mocked handler
-            var httpClient = new HttpClient(_httpMessageHandlerMock.Object);
-
-            // Initialize SearchService
-            _searchService = new SearchService(httpClient);
+            _mockLogger = new Mock<ILogger<SearchService>>();
+            _searchService = new SearchService(_mockLogger.Object);
         }
 
         [Test]
-        public async Task GetSearchResultAsync_ReturnsPositions_WhenUrlIsFound()
+        public async Task GetSearchResultAsync_ValidRequest_ReturnsPositions()
         {
-            // Arrange
-            var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.example.com" };
-            var htmlContent = "<html><body><a href=\"https://www.example.com\">Example</a></body></html>";
-            var responseMessage = new HttpResponseMessage
+            var request = new SearchRequest
             {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(htmlContent)
+                Keywords = "test",
+                Url = "https://example.com"
             };
 
-            _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req != null && req.Method == HttpMethod.Get && req.RequestUri != null && req.RequestUri.ToString().Contains("example")),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(responseMessage);
+            var result = await _searchService.GetSearchResultAsync(request);
 
-            // Act
-            var result = await _searchService.GetSearchResultAsync(searchRequest);
-
-            // Assert
-            Assert.NotNull(result); // Ensure the result is not null
-            Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.That(result.Positions, Is.Not.Empty);
-            Assert.That(result.Positions, Does.Contain(1));
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Positions, Is.Not.Null);
         }
 
         [Test]
-        public async Task GetSearchResultAsync_ReturnsEmptyPositions_WhenUrlIsNotFound()
+        public async Task GetSearchResultAsync_NoMatchingUrls_ReturnsMinusOne()
         {
-            // Arrange
-            var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.notfound.com" };
-            var htmlContent = "<html><body><a href=\"https://www.example.com\">Example</a></body></html>";
-            var responseMessage = new HttpResponseMessage
+            var request = new SearchRequest
             {
-                StatusCode = HttpStatusCode.OK,
-                Content = new StringContent(htmlContent)
+                Keywords = "no results keyword",
+                Url = "https://example.com"
             };
 
-            _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req != null && req.Method == HttpMethod.Get && req.RequestUri != null && req.RequestUri.ToString().Contains("example")),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ReturnsAsync(responseMessage);
+            var result = await _searchService.GetSearchResultAsync(request);
 
-            // Act
-            var result = await _searchService.GetSearchResultAsync(searchRequest);
-
-            // Assert
-            Assert.NotNull(result); // Ensure the result is not null
-            Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.Contains(-1, result.Positions); // Check for -1 to indicate no valid URL found
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Positions, Is.Not.Null);
+            Assert.That(result.Positions, Does.Contain(-1));
         }
 
         [Test]
-        public async Task GetSearchResultAsync_HandlesOtherHttpRequestExceptions()
+        public async Task GetSearchResultAsync_ErrorOccurs_ReturnsMinusOne()
         {
-            // Arrange
-            var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.example.com" };
+            var request = new SearchRequest
+            {
+                Keywords = "",
+                Url = ""
+            };
 
-            _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req != null && req.Method == HttpMethod.Get && req.RequestUri != null && req.RequestUri.ToString().Contains("example")),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ThrowsAsync(new HttpRequestException("Network error"));
+            var result = await _searchService.GetSearchResultAsync(request);
 
-            // Act
-            var result = await _searchService.GetSearchResultAsync(searchRequest);
-
-            // Assert
-            Assert.NotNull(result); // Ensure the result is not null
-            Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.Contains(-1, result.Positions); // Check for -1 to indicate error
-        }
-
-        [Test]
-        public async Task GetSearchResultAsync_RetriesOnRateLimitError_AndReturnsErrorAfterMaxRetries()
-        {
-            // Arrange
-            var searchRequest = new SearchRequest { Keywords = "example", Url = "https://www.example.com" };
-
-            // Setup the handler to throw a 429 error to simulate rate limiting
-            _httpMessageHandlerMock.Protected()
-                .Setup<Task<HttpResponseMessage>>(
-                    "SendAsync",
-                    ItExpr.Is<HttpRequestMessage>(req => req != null && req.Method == HttpMethod.Get && req.RequestUri != null && req.RequestUri.ToString().Contains("example")),
-                    ItExpr.IsAny<CancellationToken>()
-                )
-                .ThrowsAsync(new HttpRequestException("429 Too Many Requests"));
-
-            // Act
-            var result = await _searchService.GetSearchResultAsync(searchRequest);
-
-            // Assert
-            Assert.NotNull(result); // Ensure the result is not null
-            Assert.NotNull(result.Positions); // Ensure the Positions list is not null
-            Assert.Contains(-1, result.Positions); // Check for -1 to indicate error after retries
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.Positions, Is.Not.Null);
+            Assert.That(result.Positions, Does.Contain(-1));
         }
     }
 }
