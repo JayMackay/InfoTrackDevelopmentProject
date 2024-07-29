@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Threading;
 using InfoTrackDevelopmentProject.Business.Interfaces;
 using InfoTrackDevelopmentProject.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace InfoTrackDevelopmentProject.Business.Services
 {
     public class SearchService : ISearchService
     {
-        private readonly HttpClient _httpClient;
         private const int MaxRetries = 3;
         private const int DelayMilliseconds = 2000; // 2 seconds
+        private readonly ILogger<SearchService> _logger;
 
-        public SearchService(HttpClient httpClient)
+        public SearchService(ILogger<SearchService> logger)
         {
-            _httpClient = httpClient;
+            _logger = logger;
         }
 
         public async Task<SearchResult> GetSearchResultAsync(SearchRequest request)
@@ -30,37 +30,50 @@ namespace InfoTrackDevelopmentProject.Business.Services
             {
                 try
                 {
-                    var response = await _httpClient.GetStringAsync(url);
+                    // Create a new httpClient to refresh the service for consecutive runs
+                    using var httpClient = new HttpClient();
+
+                    var response = await httpClient.GetStringAsync(url);
+
+                    var responseContent = response.Length > 500 ? response[..500] : response;
+                    _logger.LogInformation("Response Content: {ResponseContent}", responseContent);
+
                     var positions = FindUrlPositions(response, request.Url);
 
                     if(positions.Count == 0)
                     {
-                        result.Positions.Add(-1); // Use -1 to indicate no valid URL found
+                        result.Positions.Add(-1);
                     }
                     else
                     {
                         result.Positions.AddRange(positions);
                     }
-                    break; // Exit loop on success
+                    break;
                 }
                 catch(HttpRequestException ex) when(ex.Message.Contains("429"))
                 {
-                    Console.WriteLine("Rate limit exceeded. Retrying...");
+                    _logger.LogWarning(ex, "Rate limit exceeded. Retrying...");
                     retries++;
                     if(retries >= MaxRetries)
                     {
-                        result.Positions.Add(-1); // Use -1 to indicate an error after retries
+                        result.Positions.Add(-1);
                     }
                     else
                     {
-                        await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, retries)); // Exponential backoff
+                        await Task.Delay(DelayMilliseconds * (int)Math.Pow(2, retries));
                     }
                 }
                 catch(HttpRequestException ex)
                 {
-                    Console.WriteLine($"Error occurred while fetching search results: {ex.Message}");
-                    result.Positions.Add(-1); // Use -1 to indicate an error
-                    break; // Exit loop on other errors
+                    _logger.LogError(ex, "Error occurred while fetching search results.");
+                    result.Positions.Add(-1);
+                    break;
+                }
+                catch(Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error.");
+                    result.Positions.Add(-1);
+                    break;
                 }
             }
 

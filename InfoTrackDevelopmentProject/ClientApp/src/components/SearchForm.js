@@ -4,7 +4,7 @@ import '../styles.css';
 const SearchForm = () => {
     const [keywords, setKeywords] = useState('');
     const [url, setUrl] = useState('');
-    const [result, setResult] = useState(null);
+    const [result, setResult] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -18,9 +18,12 @@ const SearchForm = () => {
 
         setError('');
         setLoading(true);
+        setResult(''); // Clear previous results
 
         try {
-            const response = await fetch('/api/search', {
+            // Add a unique query parameter to avoid caching issues
+            const timestamp = new Date().getTime();
+            const response = await fetch(`/api/search?ts=${timestamp}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
