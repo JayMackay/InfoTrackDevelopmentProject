@@ -35,7 +35,7 @@ This application includes:
   - **Configuration Management:** Uses `appsettings.json` for dynamic configuration of search engine URLs
 
 - **Frontend (React):**
-  - **Interactive UI:** Provides a user-friendly interface for submitting search queries and displaying results
+  - **Interactive UI:** Provides a user friendly interface for submitting search queries and displaying results
   - **Form Handling:** Manages form inputs for keywords, URL, and search engine selection
   - **Loading and Error States:** Displays loading indicators and error messages to enhance user experience
 
@@ -147,7 +147,7 @@ Add the new search engine's URL to the `SearchEngines` section in `appsettings.j
 
 ### 2. Update the Frontend (React)
 
-Ensure that the frontend allows users to select the new search engine. Modify `SearchEngineDropdown.js` (or the equivalent component) to include the new engine in the options.
+Ensure that the frontend allows users to select the new search engine. Modify `SearchEngineDropdown.js` (or the equivalent component) to include the new engine in the options
 
 ### 3. Test the Integration
 
